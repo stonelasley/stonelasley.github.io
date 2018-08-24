@@ -29,10 +29,10 @@ force-https: True
 #############
 
 lang: "en"
-author: "John Smith"
-title: "{ John Smith }"
-description: "Blog and website of John Smith, blogging mainly for tech. Opinions expressed are mine."
-keywords: "smith, jones, personal, jekyll, theme"
+author: "Stone Lasley"
+title: "Stone C. Lasley"
+description: "Blog and website of Stone Lasley, blogging mainly for tech. Opinions expressed are mine."
+keywords: "lasley, stone, c#, javascript, aws, typescript, iot"
 favicon: "/img/favicon.ico"
 
 ################
@@ -58,7 +58,7 @@ lines: # You can add HTML Tags in the Text
   - text: "The lower you fall, the higher you'll fly."
   - text: "Where’s your will to be weird?"
 
-me-img: "/img/jetpacktocat.png"
+me-img: "https://avatars0.githubusercontent.com/u/1717836?s=460&v=4"
 
 # To use facebook profile pic comment the previous line and uncomment the following
 # line, and replace 'user_id' with your facebook user id.
@@ -165,11 +165,11 @@ author_blurb_image: "/img/author.png"
 
 social:
   - title: "facebook"
-    url: "https://facebook.com/"
+    url: "https://facebook.com/stonelasley"
   - title: "twitter"
-    url: "https://twitter.com/"
+    url: "https://twitter.com/stonelasley"
   - title: "github"
-    url: "https://github.com/PanosSakkos/personal-jekyll-theme"
+    url: "https://github.com/stonelasley"
   - title: "bitcoin"
     url: "https://blockchain.info/address/1LHuKC9Em3KA5yoZaf7nngnNdf9K7s2gSi"
   - title: "rss"
