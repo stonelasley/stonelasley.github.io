@@ -16,7 +16,7 @@ baseurl: /stonelasley.github.io
 
 # Google tracking id
 
-google-tracking-id: ""
+google-tracking-id: "UA-67265701-3"
 
 # Forces https everywhere in your website, except when you serve it locally
 # If you are not hosted on Github Pages, and your host doesn't support https
@@ -41,7 +41,7 @@ favicon: "/img/favicon.ico"
 
 black-favicon: "/img/black-lab-glass.ico"
 
-background-img: "../img/intro-bg.jpg"
+background-img: "../img/intro-bg.png"
 
 ##############################
 # Dynamic Text on the Header #
@@ -55,11 +55,11 @@ type-speed: 10
 start-delay: 200
 delete-delay: 5000
 lines: # You can add HTML Tags in the Text
-  - text: "The lower you fall, the higher you'll fly."
-  - text: "Where’s your will to be weird?"
+  - text: "My Yorkie beats up my Pitbull"
+  - text: "I have a parrot that dances to Beastie Boys"
 
-me-img: "https://avatars0.githubusercontent.com/u/1717836?s=460&v=4"
-
+me-img: "/img/author.png"
+#https://avatars0.githubusercontent.com/u/1717836?s=460&v=4
 # To use facebook profile pic comment the previous line and uncomment the following
 # line, and replace 'user_id' with your facebook user id.
 # Facebook user id can be found by clicking on your profile pic and the large number
@@ -146,7 +146,7 @@ timeline-img: "/img/timeline/default.png"
 # Contact #
 ###########
 
-email: "your@email.here"
+email: "stonelasley@gmail.com"
 
 ################
 # Author Blurb #
@@ -186,8 +186,8 @@ err-404-img: "/img/labtocat.png"
 ##################
 
 keybase-username: johnsmith
-keybase-in-social: True
-keybase-in-footer: True
+keybase-in-social: False
+keybase-in-footer: False
 
 ################################################################################
 
