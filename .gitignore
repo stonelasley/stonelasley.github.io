@@ -17,3 +17,20 @@ _deploy/*
 Rakefile
 .jekyll-metadata
 /.idea/
+
+# React / CRA
+/node_modules
+/build
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated Notion content (generated at build time)
+/src/data/notion/*.json
+/public/images/notion/*
