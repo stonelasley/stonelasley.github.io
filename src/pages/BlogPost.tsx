@@ -2,13 +2,12 @@ import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Calendar, Clock, Tag, ArrowLeft } from 'lucide-react';
 
 // Import JSON data
 import blogPostsData from '../data/notion/blog-posts.json';
 
 /**
- * BlogPost Page - Displays a single blog post with full content
+ * BlogPost Page - Minimal article view with enhanced image support
  */
 const BlogPost: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -28,92 +27,97 @@ const BlogPost: React.FC = () => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       {/* Back Link */}
       <Link
         to="/blog"
-        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 transition"
+        className="inline-block mb-8 text-gray-900 underline hover:no-underline"
       >
-        <ArrowLeft size={20} />
-        Back to Blog
+        ← Back to Blog
       </Link>
 
       {/* Article */}
-      <article className="bg-white rounded-lg shadow-md p-8">
-        {/* Category Badge */}
-        <div className="mb-4">
-          <span className="inline-block bg-gray-100 text-gray-700 text-sm px-4 py-1 rounded-full">
-            {post.category}
-          </span>
-        </div>
-
+      <article>
         {/* Title */}
         <h1 className="text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
 
         {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-6 pb-6 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <Calendar size={18} />
-            <span>{formattedDate}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock size={18} />
-            <span>{post.readTime} min read</span>
-          </div>
-          <div className="text-gray-500">
-            By {post.author}
-          </div>
+        <div className="text-sm text-gray-600 mb-8 pb-6 border-b border-gray-300">
+          <p>
+            {formattedDate} · {post.readTime} min read · {post.category}
+          </p>
         </div>
-
-        {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {post.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="flex items-center gap-1 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full"
-              >
-                <Tag size={14} />
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Content */}
         <div className="prose prose-lg max-w-none">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              // Custom image styling
+              // Enhanced image styling with full width support
               img: ({ node, ...props }) => (
-                <img {...props} className="rounded-lg shadow-md my-4" alt={props.alt || ''} />
+                <img
+                  {...props}
+                  className="w-full my-8"
+                  alt={props.alt || ''}
+                  loading="lazy"
+                />
               ),
-              // Custom link styling
+              // Minimal link styling
+              // eslint-disable-next-line jsx-a11y/anchor-has-content
               a: ({ node, ...props }) => (
                 <a
                   {...props}
-                  className="text-blue-600 hover:text-blue-800 underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  className="text-gray-900 underline hover:no-underline"
+                  target={props.href?.startsWith('http') ? '_blank' : undefined}
+                  rel={props.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
                 />
               ),
-              // Custom code block styling
+              // Code styling
               code: ({ node, inline, ...props }: any) =>
                 inline ? (
-                  <code className="bg-gray-100 text-red-600 px-1 py-0.5 rounded" {...props} />
+                  <code className="bg-gray-200 text-gray-900 px-1 py-0.5" {...props} />
                 ) : (
-                  <code className="block bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto" {...props} />
+                  <code className="block bg-gray-900 text-gray-100 p-4 overflow-x-auto text-sm" {...props} />
                 ),
+              // Ensure proper spacing for paragraphs
+              p: ({ node, ...props }) => (
+                <p className="mb-4 leading-relaxed text-gray-800" {...props} />
+              ),
+              // Headings
+              // eslint-disable-next-line jsx-a11y/heading-has-content
+              h2: ({ node, ...props }) => (
+                <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4" {...props} />
+              ),
+              // eslint-disable-next-line jsx-a11y/heading-has-content
+              h3: ({ node, ...props }) => (
+                <h3 className="text-xl font-bold text-gray-900 mt-6 mb-3" {...props} />
+              ),
             }}
           >
             {post.content}
           </ReactMarkdown>
         </div>
 
+        {/* Tags */}
+        {post.tags && post.tags.length > 0 && (
+          <div className="mt-12 pt-6 border-t border-gray-300">
+            <p className="text-sm text-gray-600 mb-2">Tagged:</p>
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag: string) => (
+                <span
+                  key={tag}
+                  className="text-sm text-gray-700"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Last Updated */}
         {post.lastUpdated && (
-          <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">
+          <div className="mt-8 text-sm text-gray-600">
             Last updated: {new Date(post.lastUpdated).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
@@ -124,13 +128,12 @@ const BlogPost: React.FC = () => {
       </article>
 
       {/* Back to Blog Link */}
-      <div className="mt-8 text-center">
+      <div className="mt-12">
         <Link
           to="/blog"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition"
+          className="text-gray-900 underline hover:no-underline"
         >
-          <ArrowLeft size={20} />
-          Back to Blog
+          ← Back to Blog
         </Link>
       </div>
     </div>

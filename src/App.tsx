@@ -13,54 +13,36 @@ import './App.css';
 
 /**
  * Main App Component
- * Sets up routing and overall layout structure
+ * Minimal design with sidebar navigation (desktop) and mobile menu
  */
 function App() {
   return (
     <Router basename={process.env.PUBLIC_URL}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Navigation */}
+      <div className="min-h-screen bg-gray-100 flex">
+        {/* Sidebar Navigation (Desktop) */}
         <Navigation />
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/recipes" element={<Recipes />} />
-            <Route path="/recipes/:slug" element={<RecipeDetail />} />
-          </Routes>
-        </main>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col md:ml-64">
+          <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 md:py-16">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/recipes" element={<Recipes />} />
+              <Route path="/recipes/:slug" element={<RecipeDetail />} />
+            </Routes>
+          </main>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200 mt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="text-center text-gray-600">
-              <p>© {new Date().getFullYear()} My Portfolio. Powered by Notion.</p>
-              <p className="text-sm mt-2">
-                Content managed with{' '}
-                <a
-                  href="https://notion.so"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  Notion
-                </a>
-                {' '}and deployed to{' '}
-                <a
-                  href="https://pages.github.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  GitHub Pages
-                </a>
+          {/* Footer */}
+          <footer className="border-t border-gray-300 mt-16">
+            <div className="max-w-4xl w-full mx-auto px-6 py-8">
+              <p className="text-sm text-gray-600">
+                © {new Date().getFullYear()}
               </p>
             </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </div>
     </Router>
   );

@@ -5,16 +5,16 @@ import RecipeList from '../components/RecipeList';
 import recipesData from '../data/notion/recipes.json';
 
 /**
- * Recipes Page - Displays all recipes with filtering
+ * Recipes Page - Minimal recipe listing
  */
 const Recipes: React.FC = () => {
   return (
     <div>
       {/* Page Header */}
-      <div className="mb-8">
+      <div className="mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Recipes</h1>
-        <p className="text-lg text-gray-600">
-          Browse my collection of favorite recipes, from quick meals to gourmet dishes.
+        <p className="text-gray-700 leading-relaxed">
+          A collection of recipes from quick meals to more involved cooking projects.
         </p>
       </div>
 

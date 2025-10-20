@@ -2,13 +2,12 @@ import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Clock, Users, ChefHat, ArrowLeft, Star } from 'lucide-react';
 
 // Import JSON data
 import recipesData from '../data/notion/recipes.json';
 
 /**
- * RecipeDetail Page - Displays a single recipe with full content
+ * RecipeDetail Page - Minimal recipe view with enhanced image support
  */
 const RecipeDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -21,111 +20,72 @@ const RecipeDetail: React.FC = () => {
     return <Navigate to="/recipes" replace />;
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return 'bg-green-100 text-green-700';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'hard':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       {/* Back Link */}
       <Link
         to="/recipes"
-        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 transition"
+        className="inline-block mb-8 text-gray-900 underline hover:no-underline"
       >
-        <ArrowLeft size={20} />
-        Back to Recipes
+        ← Back to Recipes
       </Link>
 
       {/* Recipe */}
-      <article className="bg-white rounded-lg shadow-md p-8">
-        {/* Favorite Badge */}
-        {recipe.favorite && (
-          <div className="flex items-center gap-2 text-yellow-500 mb-4">
-            <Star size={20} fill="currentColor" />
-            <span className="font-semibold">Favorite Recipe</span>
-          </div>
-        )}
-
-        {/* Category and Difficulty */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="inline-block bg-blue-100 text-blue-700 text-sm px-4 py-1 rounded-full">
-            {recipe.category}
-          </span>
-          <span className={`inline-block text-sm px-4 py-1 rounded-full ${getDifficultyColor(recipe.difficulty)}`}>
-            {recipe.difficulty}
-          </span>
-        </div>
-
+      <article>
         {/* Title */}
         <h1 className="text-4xl font-bold text-gray-900 mb-4">{recipe.name}</h1>
 
         {/* Description */}
-        <p className="text-lg text-gray-600 mb-6">{recipe.description}</p>
+        <p className="text-lg text-gray-700 mb-6 leading-relaxed">{recipe.description}</p>
 
-        {/* Recipe Info Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-6 bg-gray-50 rounded-lg">
-          <div className="text-center">
-            <Clock size={24} className="mx-auto mb-2 text-blue-600" />
-            <div className="text-sm text-gray-600">Prep Time</div>
-            <div className="font-bold text-gray-900">{recipe.prepTime} min</div>
-          </div>
-          <div className="text-center">
-            <Clock size={24} className="mx-auto mb-2 text-blue-600" />
-            <div className="text-sm text-gray-600">Cook Time</div>
-            <div className="font-bold text-gray-900">{recipe.cookTime} min</div>
-          </div>
-          <div className="text-center">
-            <Users size={24} className="mx-auto mb-2 text-blue-600" />
-            <div className="text-sm text-gray-600">Servings</div>
-            <div className="font-bold text-gray-900">{recipe.servings}</div>
-          </div>
-          <div className="text-center">
-            <ChefHat size={24} className="mx-auto mb-2 text-blue-600" />
-            <div className="text-sm text-gray-600">Difficulty</div>
-            <div className="font-bold text-gray-900">{recipe.difficulty}</div>
-          </div>
+        {/* Recipe Info */}
+        <div className="text-sm text-gray-600 mb-8 pb-6 border-b border-gray-300">
+          <p>
+            {recipe.category} · {recipe.totalTime} min · {recipe.servings} servings · {recipe.difficulty}
+          </p>
+          <p className="mt-2">
+            Prep: {recipe.prepTime} min · Cook: {recipe.cookTime} min
+          </p>
         </div>
-
-        {/* Tags */}
-        {recipe.tags && recipe.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {recipe.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Recipe Content (Ingredients & Instructions) */}
         <div className="prose prose-lg max-w-none">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              // Custom image styling
+              // Enhanced image styling with full width support
               img: ({ node, ...props }) => (
-                <img {...props} className="rounded-lg shadow-md my-4" alt={props.alt || ''} />
+                <img
+                  {...props}
+                  className="w-full my-8"
+                  alt={props.alt || ''}
+                  loading="lazy"
+                />
               ),
-              // Custom heading styling
+              // Minimal link styling
+              // eslint-disable-next-line jsx-a11y/anchor-has-content
+              a: ({ node, ...props }) => (
+                <a
+                  {...props}
+                  className="text-gray-900 underline hover:no-underline"
+                  target={props.href?.startsWith('http') ? '_blank' : undefined}
+                  rel={props.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                />
+              ),
+              // Ensure proper spacing for paragraphs
+              p: ({ node, ...props }) => (
+                <p className="mb-4 leading-relaxed text-gray-800" {...props} />
+              ),
+              // Headings
+              // eslint-disable-next-line jsx-a11y/heading-has-content
               h2: ({ node, ...props }) => (
                 <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4" {...props} />
               ),
+              // eslint-disable-next-line jsx-a11y/heading-has-content
               h3: ({ node, ...props }) => (
                 <h3 className="text-xl font-bold text-gray-900 mt-6 mb-3" {...props} />
               ),
-              // Custom list styling
+              // Lists
               ul: ({ node, ...props }) => (
                 <ul className="list-disc list-inside space-y-2 mb-4" {...props} />
               ),
@@ -138,19 +98,26 @@ const RecipeDetail: React.FC = () => {
           </ReactMarkdown>
         </div>
 
-        {/* Print Button */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <button
-            onClick={() => window.print()}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
-          >
-            Print Recipe
-          </button>
-        </div>
+        {/* Tags */}
+        {recipe.tags && recipe.tags.length > 0 && (
+          <div className="mt-12 pt-6 border-t border-gray-300">
+            <p className="text-sm text-gray-600 mb-2">Tagged:</p>
+            <div className="flex flex-wrap gap-2">
+              {recipe.tags.map((tag: string) => (
+                <span
+                  key={tag}
+                  className="text-sm text-gray-700"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Last Updated */}
         {recipe.lastUpdated && (
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-8 text-sm text-gray-600">
             Last updated: {new Date(recipe.lastUpdated).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
@@ -161,13 +128,12 @@ const RecipeDetail: React.FC = () => {
       </article>
 
       {/* Back to Recipes Link */}
-      <div className="mt-8 text-center">
+      <div className="mt-12">
         <Link
           to="/recipes"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition"
+          className="text-gray-900 underline hover:no-underline"
         >
-          <ArrowLeft size={20} />
-          Back to Recipes
+          ← Back to Recipes
         </Link>
       </div>
     </div>
