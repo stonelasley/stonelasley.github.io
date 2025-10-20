@@ -1,6 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import RecipeCard from './RecipeCard';
 
+interface RecipeIngredient {
+  id: string;
+  name: string;
+  quantity?: number | null;
+  unit?: string | null;
+  brand?: string | null;
+  description?: string;
+  instructions?: string;
+  purpose?: string;
+  optional: boolean;
+  inPantry: boolean;
+  display?: string | null;
+}
+
 interface Recipe {
   id: string;
   name: string;
@@ -9,11 +23,13 @@ interface Recipe {
   prepTime: number;
   cookTime: number;
   totalTime: number;
+  ovenTemp?: number | null;
   category: string;
   difficulty: string;
   servings: number;
   tags: string[];
   favorite: boolean;
+  ingredients?: RecipeIngredient[];
 }
 
 interface RecipeListProps {

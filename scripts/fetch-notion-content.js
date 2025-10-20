@@ -27,6 +27,8 @@ const n2m = new NotionToMarkdown({ notionClient: notion });
 // Database IDs from environment variables
 const BLOG_DATABASE_ID = process.env.BLOG_DATABASE_ID;
 const RECIPE_DATABASE_ID = process.env.RECIPE_DATABASE_ID;
+const INGREDIENT_DATABASE_ID = process.env.INGREDIENT_DATABASE_ID;
+const RECIPE_INGREDIENT_DATABASE_ID = process.env.RECIPE_INGREDIENT_DATABASE_ID;
 
 // Output directories
 const DATA_DIR = path.join(__dirname, '../src/data/notion');
@@ -102,6 +104,56 @@ function extractPlainText(richText) {
 }
 
 /**
+ * Extracts page ID from Notion URL
+ * @param {string} url - Notion page URL
+ * @returns {string} - Page ID
+ */
+function extractPageIdFromUrl(url) {
+  if (!url) return '';
+  // Notion URLs format: https://www.notion.so/workspace/PAGE_ID or collection://PAGE_ID
+  const match = url.match(/([a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+  return match ? match[0].replace(/-/g, '') : '';
+}
+
+/**
+ * Parses Notion relation field to array of page IDs
+ * @param {Array} relationField - Notion relation property value (array of {id: string})
+ * @returns {Array<string>} - Array of page IDs
+ */
+function parseNotionRelation(relationField) {
+  if (!relationField || !Array.isArray(relationField)) return [];
+  return relationField.map(item => item.id);
+}
+
+/**
+ * Parses single Notion relation field to page ID
+ * @param {Array} relationField - Notion relation property value (array with single {id: string})
+ * @returns {string|null} - Single page ID or null
+ */
+function parseNotionSingleRelation(relationField) {
+  if (!relationField || !Array.isArray(relationField) || relationField.length === 0) {
+    return null;
+  }
+  return relationField[0].id || null;
+}
+
+/**
+ * Fetches a Notion page by ID
+ * @param {string} pageId - The Notion page ID
+ * @returns {Promise<Object>} - The page object
+ */
+async function fetchNotionPage(pageId) {
+  try {
+    await delay(350); // Rate limiting
+    const page = await notion.pages.retrieve({ page_id: pageId });
+    return page;
+  } catch (error) {
+    console.error(`Error fetching page ${pageId}:`, error.message);
+    return null;
+  }
+}
+
+/**
  * Processes Notion blocks and downloads any images
  * @param {string} pageId - The Notion page ID
  * @param {string} slug - The slug for naming images
@@ -140,6 +192,71 @@ async function processPageContent(pageId, slug) {
     console.error(`Error processing content for page ${pageId}:`, error.message);
     return { markdown: '', imageMap: {} };
   }
+}
+
+/**
+ * Fetches ingredient details from RecipeIngredient junction entries
+ * @param {Array<string>} recipeIngredientIds - Array of RecipeIngredient page IDs
+ * @returns {Promise<Array>} - Array of ingredient objects with details
+ */
+async function fetchRecipeIngredients(recipeIngredientIds) {
+  if (!recipeIngredientIds || recipeIngredientIds.length === 0) {
+    return [];
+  }
+
+  const ingredientsWithDetails = [];
+
+  for (const riPageId of recipeIngredientIds) {
+    if (!riPageId) continue;
+
+    // Fetch RecipeIngredient junction entry
+    const riPage = await fetchNotionPage(riPageId);
+    if (!riPage) continue;
+
+    const riProps = riPage.properties;
+
+    // Extract RecipeIngredient properties
+    const quantity = riProps.Quantity?.number || null;
+    const unit = riProps.Unit?.select?.name || null;
+    const purpose = extractPlainText(riProps.Purpose?.rich_text);
+    const instructions = extractPlainText(riProps.Instructions?.rich_text);
+    const optional = riProps.Optional?.checkbox || false;
+    const display = riProps.Display?.formula?.string || null;
+
+    // Get Ingredient page ID from RecipeIngredient relation
+    const ingredientPageId = parseNotionSingleRelation(riProps['Ingredient Database']?.relation);
+
+    let ingredientDetails = null;
+    if (ingredientPageId) {
+      const ingredientPage = await fetchNotionPage(ingredientPageId);
+      if (ingredientPage) {
+        const ingProps = ingredientPage.properties;
+        ingredientDetails = {
+          id: ingredientPage.id,
+          name: extractPlainText(ingProps.Name?.title),
+          description: extractPlainText(ingProps.Description?.rich_text),
+          brand: ingProps.Brand?.select?.name || null,
+          inPantry: ingProps['In Pantry']?.checkbox || false
+        };
+      }
+    }
+
+    ingredientsWithDetails.push({
+      id: riPage.id,
+      name: ingredientDetails?.name || 'Unknown Ingredient',
+      quantity,
+      unit,
+      brand: ingredientDetails?.brand || null,
+      description: ingredientDetails?.description || '',
+      instructions,
+      purpose,
+      optional,
+      inPantry: ingredientDetails?.inPantry || false,
+      display
+    });
+  }
+
+  return ingredientsWithDetails;
 }
 
 /**
@@ -265,15 +382,41 @@ async function fetchRecipes() {
       const description = extractPlainText(props.Description?.rich_text);
       const prepTime = props.PrepTime?.number || 0;
       const cookTime = props.CookTime?.number || 0;
+      const ovenTemp = props['OvenTemp (F)']?.number || null;
       const category = props.Category?.select?.name || 'Other';
       const difficulty = props.Difficulty?.select?.name || 'Medium';
       const servings = props.Servings?.number || 1;
       const tags = props.Tags?.multi_select?.map(tag => tag.name) || [];
       const favorite = props.Favorite?.checkbox || false;
 
+      // Extract and download hero image if present
+      let heroImg = null;
+      if (props.HeroImg?.files && props.HeroImg.files.length > 0) {
+        const heroFile = props.HeroImg.files[0];
+        const heroUrl = heroFile.file?.url || heroFile.external?.url;
+        if (heroUrl) {
+          try {
+            const imageExt = path.extname(new URL(heroUrl).pathname) || '.png';
+            const filename = `${slug}-hero${imageExt}`;
+            heroImg = await downloadImage(heroUrl, filename);
+            console.log(`  Downloaded hero image: ${filename}`);
+            await delay(100); // Small delay after download
+          } catch (err) {
+            console.error(`  Failed to download hero image: ${err.message}`);
+          }
+        }
+      }
+
       // Get page content (includes ingredients and instructions)
       console.log(`Processing recipe: ${name}`);
       const { markdown } = await processPageContent(page.id, slug);
+
+      // Fetch structured ingredients from junction table
+      const recipeIngredientIds = parseNotionRelation(props.RecipeIngredient?.relation);
+      console.log(`  Fetching ${recipeIngredientIds.length} ingredients...`);
+
+      const ingredients = await fetchRecipeIngredients(recipeIngredientIds);
+      console.log(`  Found ${ingredients.length} ingredients with details`);
 
       recipes.push({
         id: page.id,
@@ -283,12 +426,15 @@ async function fetchRecipes() {
         prepTime,
         cookTime,
         totalTime: prepTime + cookTime,
+        ovenTemp,
         category,
         difficulty,
         servings,
         tags,
         favorite,
         content: markdown,
+        ingredients,
+        heroImg,
         lastUpdated: page.last_edited_time
       });
     }
@@ -326,10 +472,15 @@ async function main() {
     process.exit(1);
   }
 
+  // Note: INGREDIENT_DATABASE_ID and RECIPE_INGREDIENT_DATABASE_ID are optional
+  // If not provided, recipes will still be fetched but without structured ingredient data
+
   console.log('Environment variables loaded:');
   console.log('- NOTION_API_KEY:', process.env.NOTION_API_KEY ? '✓ Set' : '✗ Not set');
   console.log('- BLOG_DATABASE_ID:', BLOG_DATABASE_ID);
   console.log('- RECIPE_DATABASE_ID:', RECIPE_DATABASE_ID);
+  console.log('- INGREDIENT_DATABASE_ID:', INGREDIENT_DATABASE_ID || '(optional - not set)');
+  console.log('- RECIPE_INGREDIENT_DATABASE_ID:', RECIPE_INGREDIENT_DATABASE_ID || '(optional - not set)');
   console.log('='.repeat(50));
 
   try {
