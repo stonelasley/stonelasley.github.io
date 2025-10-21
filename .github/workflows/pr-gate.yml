@@ -1,4 +1,4 @@
-name: Lint Check
+name: PR Gate
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
+  pr-gate:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +31,14 @@ jobs:
       # Run ESLint
       - name: Run ESLint
         run: npm run lint
+
+      # Build the project
+      - name: Build project
+        run: npm run build
+        env:
+          CI: false  # Treat warnings as warnings, not errors
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          BLOG_DATABASE_ID: ${{ secrets.BLOG_DATABASE_ID }}
+          RECIPE_DATABASE_ID: ${{ secrets.RECIPE_DATABASE_ID }}
+          INGREDIENT_DATABASE_ID: ${{ secrets.INGREDIENT_DATABASE_ID }}
+          RECIPE_INGREDIENT_DATABASE_ID: ${{ secrets.RECIPE_INGREDIENT_DATABASE_ID }}
