@@ -195,11 +195,95 @@ async function processPageContent(pageId, slug) {
 }
 
 /**
- * Fetches ingredient details from RecipeIngredient junction entries
- * @param {Array<string>} recipeIngredientIds - Array of RecipeIngredient page IDs
- * @returns {Promise<Array>} - Array of ingredient objects with details
+ * Fetches all ingredients from Ingredient database
+ * @returns {Promise<Map>} - Map of ingredient ID to ingredient data
  */
-async function fetchRecipeIngredients(recipeIngredientIds) {
+async function fetchAllIngredients() {
+  if (!INGREDIENT_DATABASE_ID) {
+    console.log('Skipping ingredients fetch - INGREDIENT_DATABASE_ID not set');
+    return new Map();
+  }
+
+  console.log('Fetching all ingredients...');
+
+  try {
+    const response = await notion.databases.query({
+      database_id: INGREDIENT_DATABASE_ID
+    });
+
+    const ingredientsMap = new Map();
+
+    for (const page of response.results) {
+      const props = page.properties;
+      const ingredientData = {
+        id: page.id,
+        name: extractPlainText(props.Name?.title),
+        description: extractPlainText(props.Description?.rich_text),
+        brand: props.Brand?.select?.name || null,
+        inPantry: props['In Pantry']?.checkbox || false
+      };
+      ingredientsMap.set(page.id, ingredientData);
+    }
+
+    console.log(`Fetched ${ingredientsMap.size} ingredients`);
+    return ingredientsMap;
+  } catch (error) {
+    console.error('Error fetching ingredients:', error.message);
+    return new Map();
+  }
+}
+
+/**
+ * Fetches all recipe-ingredients from RecipeIngredient junction database
+ * @returns {Promise<Map>} - Map of recipe-ingredient ID to recipe-ingredient data
+ */
+async function fetchAllRecipeIngredients() {
+  if (!RECIPE_INGREDIENT_DATABASE_ID) {
+    console.log('Skipping recipe-ingredients fetch - RECIPE_INGREDIENT_DATABASE_ID not set');
+    return new Map();
+  }
+
+  console.log('Fetching all recipe-ingredients...');
+
+  try {
+    const response = await notion.databases.query({
+      database_id: RECIPE_INGREDIENT_DATABASE_ID
+    });
+
+    const recipeIngredientsMap = new Map();
+
+    for (const page of response.results) {
+      const props = page.properties;
+      const recipeIngredientData = {
+        id: page.id,
+        recipeId: parseNotionSingleRelation(props.Recipe?.relation),
+        ingredientId: parseNotionSingleRelation(props['Ingredient Database']?.relation),
+        quantity: props.Quantity?.number || null,
+        unit: props.Unit?.select?.name || null,
+        purpose: extractPlainText(props.Purpose?.rich_text),
+        instructions: extractPlainText(props.Instructions?.rich_text),
+        optional: props.Optional?.checkbox || false,
+        display: props.Display?.formula?.string || null
+      };
+      recipeIngredientsMap.set(page.id, recipeIngredientData);
+    }
+
+    console.log(`Fetched ${recipeIngredientsMap.size} recipe-ingredients`);
+    return recipeIngredientsMap;
+  } catch (error) {
+    console.error('Error fetching recipe-ingredients:', error.message);
+    return new Map();
+  }
+}
+
+/**
+ * Builds ingredient details for a recipe using local data
+ * @param {Array<string>} recipeIngredientIds - Array of RecipeIngredient page IDs
+ * @param {Map} recipeIngredientsMap - Map of all recipe-ingredients
+ * @param {Map} ingredientsMap - Map of all ingredients
+ * @returns {Array} - Array of ingredient objects with details
+ */
+function buildRecipeIngredients(recipeIngredientIds, recipeIngredientsMap, ingredientsMap) {
   if (!recipeIngredientIds || recipeIngredientIds.length === 0) {
     return [];
   }
@@ -209,50 +293,23 @@ async function fetchRecipeIngredients(recipeIngredientIds) {
   for (const riPageId of recipeIngredientIds) {
     if (!riPageId) continue;
 
-    // Fetch RecipeIngredient junction entry
-    const riPage = await fetchNotionPage(riPageId);
-    if (!riPage) continue;
+    const riData = recipeIngredientsMap.get(riPageId);
+    if (!riData) continue;
 
-    const riProps = riPage.properties;
-
-    // Extract RecipeIngredient properties
-    const quantity = riProps.Quantity?.number || null;
-    const unit = riProps.Unit?.select?.name || null;
-    const purpose = extractPlainText(riProps.Purpose?.rich_text);
-    const instructions = extractPlainText(riProps.Instructions?.rich_text);
-    const optional = riProps.Optional?.checkbox || false;
-    const display = riProps.Display?.formula?.string || null;
-
-    // Get Ingredient page ID from RecipeIngredient relation
-    const ingredientPageId = parseNotionSingleRelation(riProps['Ingredient Database']?.relation);
-
-    let ingredientDetails = null;
-    if (ingredientPageId) {
-      const ingredientPage = await fetchNotionPage(ingredientPageId);
-      if (ingredientPage) {
-        const ingProps = ingredientPage.properties;
-        ingredientDetails = {
-          id: ingredientPage.id,
-          name: extractPlainText(ingProps.Name?.title),
-          description: extractPlainText(ingProps.Description?.rich_text),
-          brand: ingProps.Brand?.select?.name || null,
-          inPantry: ingProps['In Pantry']?.checkbox || false
-        };
-      }
-    }
+    const ingredientData = riData.ingredientId ? ingredientsMap.get(riData.ingredientId) : null;
 
     ingredientsWithDetails.push({
-      id: riPage.id,
-      name: ingredientDetails?.name || 'Unknown Ingredient',
-      quantity,
-      unit,
-      brand: ingredientDetails?.brand || null,
-      description: ingredientDetails?.description || '',
-      instructions,
-      purpose,
-      optional,
-      inPantry: ingredientDetails?.inPantry || false,
-      display
+      id: riData.id,
+      name: ingredientData?.name || 'Unknown Ingredient',
+      quantity: riData.quantity,
+      unit: riData.unit,
+      brand: ingredientData?.brand || null,
+      description: ingredientData?.description || '',
+      instructions: riData.instructions,
+      purpose: riData.purpose,
+      optional: riData.optional,
+      inPantry: ingredientData?.inPantry || false,
+      display: riData.display
     });
   }
 
@@ -337,9 +394,11 @@ async function fetchBlogPosts() {
 
 /**
  * Fetches and processes recipes from Notion
+ * @param {Map} recipeIngredientsMap - Map of all recipe-ingredients
+ * @param {Map} ingredientsMap - Map of all ingredients
  * @returns {Promise<Array>} - Array of recipe objects
  */
-async function fetchRecipes() {
+async function fetchRecipes(recipeIngredientsMap, ingredientsMap) {
   console.log('Fetching recipes...');
 
   try {
@@ -389,34 +448,23 @@ async function fetchRecipes() {
       const tags = props.Tags?.multi_select?.map(tag => tag.name) || [];
       const favorite = props.Favorite?.checkbox || false;
 
-      // Extract and download hero image if present
+      // Extract hero image URL if present
       let heroImg = null;
-      if (props.HeroImg?.files && props.HeroImg.files.length > 0) {
-        const heroFile = props.HeroImg.files[0];
-        const heroUrl = heroFile.file?.url || heroFile.external?.url;
-        if (heroUrl) {
-          try {
-            const imageExt = path.extname(new URL(heroUrl).pathname) || '.png';
-            const filename = `${slug}-hero${imageExt}`;
-            heroImg = await downloadImage(heroUrl, filename);
-            console.log(`  Downloaded hero image: ${filename}`);
-            await delay(100); // Small delay after download
-          } catch (err) {
-            console.error(`  Failed to download hero image: ${err.message}`);
-          }
-        }
+      if (props.heroImg?.files && props.heroImg.files.length > 0) {
+        const heroFile = props.heroImg.files[0];
+        heroImg = heroFile.file?.url || heroFile.external?.url || null;
       }
 
       // Get page content (includes ingredients and instructions)
       console.log(`Processing recipe: ${name}`);
       const { markdown } = await processPageContent(page.id, slug);
 
-      // Fetch structured ingredients from junction table
+      // Build structured ingredients from local data (no API calls)
       const recipeIngredientIds = parseNotionRelation(props.RecipeIngredient?.relation);
-      console.log(`  Fetching ${recipeIngredientIds.length} ingredients...`);
+      console.log(`  Building ${recipeIngredientIds.length} ingredients from local data...`);
 
-      const ingredients = await fetchRecipeIngredients(recipeIngredientIds);
-      console.log(`  Found ${ingredients.length} ingredients with details`);
+      const ingredients = buildRecipeIngredients(recipeIngredientIds, recipeIngredientsMap, ingredientsMap);
+      console.log(`  Built ${ingredients.length} ingredients with details`);
 
       recipes.push({
         id: page.id,
@@ -484,15 +532,21 @@ async function main() {
   console.log('='.repeat(50));
 
   try {
+    // Fetch all ingredients and recipe-ingredients first (optimization)
+    const ingredientsMap = await fetchAllIngredients();
+    const recipeIngredientsMap = await fetchAllRecipeIngredients();
+
     // Fetch content sequentially to better isolate errors
     const blogPosts = await fetchBlogPosts();
-    const recipes = await fetchRecipes();
+    const recipes = await fetchRecipes(recipeIngredientsMap, ingredientsMap);
 
     // Create metadata
     const metadata = {
       lastFetched: new Date().toISOString(),
       blogPostCount: blogPosts.length,
       recipeCount: recipes.length,
+      ingredientCount: ingredientsMap.size,
+      recipeIngredientCount: recipeIngredientsMap.size,
       totalItems: blogPosts.length + recipes.length
     };
 
@@ -508,6 +562,19 @@ async function main() {
       JSON.stringify(recipes, null, 2)
     );
     console.log(`✓ Saved ${recipes.length} recipes to recipes.json`);
+
+    // Save ingredients and recipe-ingredients for reference (optional)
+    fs.writeFileSync(
+      path.join(DATA_DIR, 'ingredients.json'),
+      JSON.stringify(Array.from(ingredientsMap.values()), null, 2)
+    );
+    console.log(`✓ Saved ${ingredientsMap.size} ingredients to ingredients.json`);
+
+    fs.writeFileSync(
+      path.join(DATA_DIR, 'recipe-ingredients.json'),
+      JSON.stringify(Array.from(recipeIngredientsMap.values()), null, 2)
+    );
+    console.log(`✓ Saved ${recipeIngredientsMap.size} recipe-ingredients to recipe-ingredients.json`);
 
     fs.writeFileSync(
       path.join(DATA_DIR, 'metadata.json'),
