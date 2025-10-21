@@ -51,6 +51,8 @@ jobs:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           BLOG_DATABASE_ID: ${{ secrets.BLOG_DATABASE_ID }}
           RECIPE_DATABASE_ID: ${{ secrets.RECIPE_DATABASE_ID }}
+          INGREDIENT_DATABASE_ID: ${{ secrets.INGREDIENT_DATABASE_ID }}
+          RECIPE_INGREDIENT_DATABASE_ID: ${{ secrets.RECIPE_INGREDIENT_DATABASE_ID }}
         run: node scripts/fetch-notion-content.js
 
       # Build the React app
@@ -58,6 +60,11 @@ jobs:
         run: npm run build
         env:
           CI: false  # Treat warnings as warnings, not errors
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          BLOG_DATABASE_ID: ${{ secrets.BLOG_DATABASE_ID }}
+          RECIPE_DATABASE_ID: ${{ secrets.RECIPE_DATABASE_ID }}
+          INGREDIENT_DATABASE_ID: ${{ secrets.INGREDIENT_DATABASE_ID }}
+          RECIPE_INGREDIENT_DATABASE_ID: ${{ secrets.RECIPE_INGREDIENT_DATABASE_ID }}
 
       # Setup GitHub Pages
       - name: Setup Pages
