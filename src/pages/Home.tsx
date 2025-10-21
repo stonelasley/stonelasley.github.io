@@ -29,16 +29,10 @@ const Home: React.FC = () => {
         <h1 className="text-4xl font-bold text-gray-900 mb-6">Hello</h1>
         <div className="prose prose-lg max-w-none">
           <p>
-            I'm a technical writer at <a href="https://google.com" target="_blank" rel="noopener noreferrer">Google</a>, where I'm content lead for <a href="https://web.dev" target="_blank" rel="noopener noreferrer">web.dev</a> and <a href="https://developer.chrome.com" target="_blank" rel="noopener noreferrer">developer.chrome.com</a>.
+            I'm a developer, technical leader, bodybuilder, photographer, skier, AI enthusiast, and horology aficianado. Welcome to my website where all my dispirate interests come together.
           </p>
           <p>
-            I've written a bunch of <Link to="/blog">articles</Link>, and work on a couple of CSS specifications at the CSS Working Group. I speak at conferences, most often about CSS these days.
-          </p>
-          <p>
-            You can find out <Link to="/blog">more about me</Link>, read what I'm working on <Link to="/blog">now</Link>, or explore the <Link to="/blog">archives</Link> of this site, which go back to 2001.
-          </p>
-          <p>
-            <Link to="/blog">Contact me here</Link>.
+            You can read more about what I've been <Link to="/blog">working on</Link> or what I've been <Link to="/recipes">cooking up</Link> .
           </p>
         </div>
 
@@ -46,7 +40,7 @@ const Home: React.FC = () => {
 
         <h2 className="text-2xl font-bold text-gray-900 mb-4">This site...</h2>
         <p className="text-gray-700 leading-relaxed">
-          Is a redesign in progress. Apologies for any mess, as I move over 20 years of content around.
+          is a test bed, it won't be perfect, when it has quirks or lacks polish in certain areas feel free to <Link to="https://github.com/stonelasley/stonelasley.github.io/issues">open an issue</Link> if it's disruptive, but the chances are I know about it and just haven't gotten to it.
         </p>
       </section>
 

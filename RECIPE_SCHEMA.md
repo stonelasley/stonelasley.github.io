@@ -42,6 +42,7 @@ Recipe ←→ RecipeIngredient ←→ Ingredient
 - `Status` (Select) - Draft | Published | Archived
 - `RecipeIngredient` (Relation) - Array of RecipeIngredient page URLs
 - `IngredientList` (Rollup) - Computed from RecipeIngredient (optional)
+- `heroImg` (Files & media) - Hero/featured image URL for the recipe
 
 ### 2. Ingredient Database
 
@@ -105,18 +106,27 @@ The implementation uses comprehensive TypeScript types defined in `src/types/rec
 
 The `scripts/fetch-notion-content.js` script handles fetching and joining data:
 
-### Step-by-Step Process
+### Step-by-Step Process (Optimized)
 
-1. **Fetch Recipe** from Recipe Database
-2. **Parse RecipeIngredient URLs** from Recipe.RecipeIngredient property
-3. **For each RecipeIngredient URL:**
-   - Fetch RecipeIngredient page
-   - Extract quantity, unit, instructions, purpose, optional flag
-   - Parse Ingredient URL from RecipeIngredient['Ingredient Database']
-   - Fetch Ingredient page
-   - Extract ingredient name, brand, description, inPantry status
-   - Combine into ingredient object with full details
-4. **Return Recipe** with `ingredients` array populated
+1. **Fetch All Ingredients** from Ingredient Database (single query)
+2. **Fetch All RecipeIngredients** from RecipeIngredient Database (single query)
+3. **For each Recipe:**
+   - Fetch Recipe page from Recipe Database
+   - Extract recipe properties (name, times, hero image, etc.)
+   - Parse RecipeIngredient IDs from Recipe.RecipeIngredient relation
+   - **Build ingredient details using local lookups** (no API calls)
+   - Extract hero image URL from heroImg property
+   - Fetch page content (markdown) for instructions
+4. **Return Recipe** with `ingredients` array and `heroImg` URL
+
+### Performance Optimization
+
+**Before optimization:** 2 + 2N API calls per recipe (N = number of ingredients)
+**After optimization:** 2 database queries + 1 call per recipe
+
+For 10 recipes with 10 ingredients each:
+- **Before:** ~210 API calls
+- **After:** ~22 API calls (90% reduction)
 
 ### Rate Limiting
 
@@ -128,20 +138,43 @@ The script implements rate limiting to respect Notion API limits (3 requests/sec
 
 ### RecipeDetail Component
 
-The recipe detail page (`src/pages/RecipeDetail.tsx`) displays ingredients in two ways:
+The recipe detail page (`src/pages/RecipeDetail.tsx`) displays:
 
-1. **Structured Ingredients Section** (NEW)
+1. **Hero Image** (if present)
+   - Displayed below the recipe title
+   - Optimized via Cloudinary transformations (1200px width, auto quality/format)
+   - Full-width with rounded corners
+
+2. **Structured Ingredients Section**
+   - Left column (sticky on desktop, Epicurious-style layout)
    - Displays ingredients from the junction table
    - Shows quantity, unit, ingredient name, brand
    - Marks optional ingredients
+   - Shows "in pantry" indicators
    - Shows preparation instructions
    - Shows purpose when available
    - Uses Display field if available
+   - **Step Through Mode**: Toggle to show checkboxes for tracking progress
 
-2. **Markdown Content Section** (EXISTING)
-   - Still displays the full recipe content as markdown
-   - Useful for additional context or instructions
-   - Can include ingredients if user prefers manual formatting
+3. **Markdown Content Section**
+   - Right column (2/3 width on desktop)
+   - Full recipe instructions as markdown
+   - **Step Through Mode**: Shows checkboxes next to ordered list items
+
+### RecipeCard Component
+
+Recipe list cards (`src/components/RecipeCard.tsx`) display:
+- Recipe title
+- Hero image (if present) - optimized via Cloudinary (800px width)
+- Description
+- Recipe metadata (category, time, servings, difficulty)
+
+### Image Optimization
+
+All hero images hosted on Cloudinary are automatically optimized using transformation parameters:
+- **Recipe Cards**: `w_800,c_limit,q_auto,f_auto`
+- **Recipe Hero**: `w_1200,c_limit,q_auto,f_auto`
+- Handled by `src/utils/cloudinary.ts` utility functions
 
 ### Example Display
 
@@ -253,22 +286,26 @@ If you have existing recipes without structured ingredients:
 
 ## Performance Considerations
 
-### API Calls Per Recipe
+### API Calls (Optimized Implementation)
 
-For a recipe with N ingredients:
-- 1 call to fetch the recipe
-- 1 call for page content (markdown)
-- N calls to fetch RecipeIngredient entries
-- N calls to fetch Ingredient details
+The current implementation uses an optimized approach:
 
-**Total: 2 + 2N calls per recipe**
+**Total API calls for entire build:**
+- 1 query to fetch all ingredients
+- 1 query to fetch all recipe-ingredients
+- N queries for N recipes (1 per recipe for metadata + content)
 
-### Optimization Ideas
+**Example:** For 10 recipes with 100 total ingredients:
+- **Old approach**: ~210 API calls
+- **Current approach**: ~12 API calls (90% reduction)
 
-1. **Caching** - Cache Ingredient data to avoid redundant fetches
-2. **Batch Fetching** - Use Notion's batch API if available
-3. **Partial Updates** - Only fetch changed recipes
-4. **Build-time Generation** - Keep current approach (static JSON)
+### Additional Optimizations
+
+1. ✅ **Implemented**: Local lookup tables for ingredients (no per-recipe API calls)
+2. ✅ **Implemented**: Cloudinary CDN for hero images (no local download)
+3. ✅ **Implemented**: Build-time static JSON generation
+4. **Future**: Partial Updates - Only fetch changed recipes
+5. **Future**: Incremental builds with caching
 
 ## Best Practices
 
@@ -304,10 +341,14 @@ For a recipe with N ingredients:
 ### Key Files
 
 - `src/types/recipe.ts` - TypeScript type definitions
-- `scripts/fetch-notion-content.js` - Data fetching script
-- `src/pages/RecipeDetail.tsx` - Recipe display component
-- `src/components/RecipeCard.tsx` - Recipe card component
+- `scripts/fetch-notion-content.js` - Data fetching script (optimized)
+- `src/pages/RecipeDetail.tsx` - Recipe display component (with hero image & step-through mode)
+- `src/components/RecipeCard.tsx` - Recipe card component (with hero image)
 - `src/components/RecipeList.tsx` - Recipe list component
+- `src/utils/cloudinary.ts` - Cloudinary image optimization utilities
+- `src/data/notion/recipes.json` - Generated recipe data
+- `src/data/notion/ingredients.json` - Generated ingredient data
+- `src/data/notion/recipe-ingredients.json` - Generated recipe-ingredient junction data
 - `.env.example` - Environment variable template
 - `RECIPE_SCHEMA.md` - This documentation file
 

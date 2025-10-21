@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { siGithub, siInstagram, siWhatsapp, siProtonmail, siHevy } from 'simple-icons';
+import SimpleIcon from './SimpleIcon';
 
 /**
  * Navigation component - Minimal sidebar navigation
@@ -16,6 +18,14 @@ const Navigation: React.FC = () => {
     { path: '/recipes', label: 'Recipes' },
   ];
 
+  const socialLinks = [
+    { url: 'https://github.com/stonelasley', label: 'GitHub', path: siGithub.path },
+    { url: 'https://instagram.com/sclarklasley', label: 'Instagram', path: siInstagram.path },
+    { url: 'https://wa.link/8f2cuh', label: 'WhatsApp', path: siWhatsapp.path },
+    { url: 'mailto:website@lasley.io', label: 'Email', path: siProtonmail.path },
+    { url: 'https://hevy.com/user/stonelasley', label: 'Hevy', path: siHevy.path }
+  ];
+
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -26,7 +36,7 @@ const Navigation: React.FC = () => {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-100 border-b border-gray-300 z-50 px-6 py-4 flex items-center justify-between">
         <Link to="/" className="text-lg font-bold text-gray-900">
-          Your Name
+          Stone C. Lasley
         </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -47,7 +57,7 @@ const Navigation: React.FC = () => {
           />
 
           {/* Fly-out Panel */}
-          <nav className="md:hidden fixed top-0 right-0 bottom-0 w-64 bg-white z-50 p-6 overflow-y-auto">
+          <nav className="md:hidden fixed top-0 right-0 bottom-0 w-64 bg-white z-50 p-6 overflow-y-auto flex flex-col">
             <div className="flex justify-end mb-8">
               <button
                 onClick={() => setIsOpen(false)}
@@ -63,27 +73,44 @@ const Navigation: React.FC = () => {
                   <Link
                     to={item.path}
                     onClick={() => setIsOpen(false)}
-                    className={`block text-base ${
-                      isActive(item.path)
-                        ? 'text-gray-900 underline'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`block text-base ${isActive(item.path)
+                      ? 'text-gray-900 underline'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     {item.label}
                   </Link>
                 </li>
               ))}
             </ul>
+
+            {/* Social Icons - Mobile */}
+            <div className="mt-auto pt-8 border-t border-gray-200">
+              <div className="flex gap-4">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                    aria-label={social.label}
+                  >
+                    <SimpleIcon path={social.path} size={20} />
+                  </a>
+                ))}
+              </div>
+            </div>
           </nav>
         </>
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block fixed top-0 left-0 bottom-0 w-64 bg-gray-100 border-r border-gray-300 p-8 overflow-y-auto">
+      <aside className="hidden md:block fixed top-0 left-0 bottom-0 w-64 bg-gray-100 border-r border-gray-300 p-8 overflow-y-auto flex flex-col">
         <div className="mb-12">
           <Link to="/" className="block">
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Your Name</h1>
-            <p className="text-sm text-gray-600">Doing stuff on the web since 1996.</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Stone C. Lasley</h1>
+            <p className="text-sm text-gray-600">Building stuff with software for quite a while.</p>
           </Link>
         </div>
 
@@ -93,11 +120,10 @@ const Navigation: React.FC = () => {
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className={`block text-base ${
-                    isActive(item.path)
-                      ? 'text-gray-900 underline'
-                      : 'text-gray-900 hover:underline'
-                  }`}
+                  className={`block text-base ${isActive(item.path)
+                    ? 'text-gray-900 underline'
+                    : 'text-gray-900 hover:underline'
+                    }`}
                 >
                   {item.label}
                 </Link>
@@ -105,6 +131,24 @@ const Navigation: React.FC = () => {
             ))}
           </ul>
         </nav>
+
+        {/* Social Icons - Desktop */}
+        <div className="mt-auto pt-8 border-t border-gray-300">
+          <div className="flex gap-4">
+            {socialLinks.map((social) => (
+              <a
+                key={social.label}
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label={social.label}
+              >
+                <SimpleIcon path={social.path} size={20} />
+              </a>
+            ))}
+          </div>
+        </div>
       </aside>
 
       {/* Mobile Spacer */}

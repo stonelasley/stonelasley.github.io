@@ -26,6 +26,7 @@
     "reading-time": "^1.5.0",
     "remark-gfm": "^4.0.1",
     "sharp": "^0.34.4",
+    "simple-icons": "^15.17.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },

@@ -14,7 +14,7 @@ const Blog: React.FC = () => {
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Blog</h1>
         <p className="text-gray-700 leading-relaxed">
-          Articles about web development, CSS, and various technical topics.
+          Articles about software development, learning, horology, bodybuilding, photography, and life.
         </p>
       </div>
 
