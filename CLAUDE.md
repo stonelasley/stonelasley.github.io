@@ -12,6 +12,8 @@ This is a personal website/portfolio project built with Create React App and Typ
 - `npm run fetch-content` - Fetch content from Notion and generate JSON files
 - `npm start` - Start development server at http://localhost:3000 with hot reload
 - `npm test` - Run tests in interactive watch mode
+- `npm run lint` - Run ESLint on all TypeScript/TSX files
+- `npm run lint:fix` - Run ESLint and automatically fix issues where possible
 - `npm run build` - Create production build (automatically runs `fetch-content` first)
 
 ### Deployment
@@ -109,6 +111,14 @@ Required in `.env.local` for local development and as GitHub Secrets:
 - JSX: react-jsx (new JSX transform)
 - Module resolution: Node
 
+### Code Quality & Linting
+- **ESLint** configured via Create React App
+- Extends `react-app` and `react-app/jest` configurations
+- **IMPORTANT**: Always run `npm run lint` before committing code
+- Use `npm run lint:fix` to automatically fix common issues
+- All TypeScript/TSX files must pass linting checks
+- Linting checks types, React best practices, and code style
+
 ### Git Workflow
 - Main branch: `master`
 - Deploy target: GitHub Pages (via GitHub Actions)
@@ -131,8 +141,10 @@ Required in `.env.local` for local development and as GitHub Secrets:
 ### Development Workflow
 1. Create/edit content in Notion
 2. Run `npm run fetch-content` locally to test
-3. Push changes to trigger automatic deployment
-4. Content updates daily via scheduled GitHub Action
+3. **Run `npm run lint` to check for code quality issues**
+4. **Fix any linting errors before committing**
+5. Push changes to trigger automatic deployment
+6. Content updates daily via scheduled GitHub Action
 
 ### Styling
 - Tailwind CSS is configured with default theme
