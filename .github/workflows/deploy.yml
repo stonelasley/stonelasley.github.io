@@ -1,10 +1,11 @@
 name: Build and Deploy to GitHub Pages
 
 on:
-  # Trigger on push to main branch
+  # Trigger on push to main branch and deploy branch
   push:
     branches:
       - master
+      - deploy
 
   # Run daily at 2 AM UTC to fetch fresh content from Notion
   schedule:
