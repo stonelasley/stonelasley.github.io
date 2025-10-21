@@ -38,7 +38,7 @@ export interface Recipe {
   /** Rollup field for ingredient list (computed) */
   IngredientList?: string;
   /** Hero image URL (Files & media property) */
-  HeroImg?: string;
+  heroImg?: string;
 }
 
 /**

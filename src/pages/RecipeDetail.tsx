@@ -3,6 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { RecipeDisplay } from '../types/recipe';
+import { CLOUDINARY_PRESETS } from '../utils/cloudinary';
 
 // Import JSON data
 import recipesData from '../data/notion/recipes.json';
@@ -65,7 +66,7 @@ const RecipeDetail: React.FC = () => {
         {recipe.heroImg && (
           <div className="mb-8">
             <img
-              src={recipe.heroImg}
+              src={CLOUDINARY_PRESETS.recipeHero(recipe.heroImg)}
               alt={recipe.name}
               className="w-full rounded-lg"
               loading="lazy"
@@ -106,7 +107,7 @@ const RecipeDetail: React.FC = () => {
           {recipe.ingredients && recipe.ingredients.length > 0 && (
             <div className="lg:col-span-1">
               <div className="lg:sticky lg:top-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Ingredients</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Ingredients</h2>
                 <ul className="space-y-2 border-l-2 border-gray-300 pl-4">
                   {recipe.ingredients.map((ingredient: any) => (
                     <li key={ingredient.id} className="text-gray-800 leading-relaxed">
