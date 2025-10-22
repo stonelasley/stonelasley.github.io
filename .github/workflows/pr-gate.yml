@@ -28,13 +28,13 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        run: npm ci
+        run: npm i
 
       # Run validation (lint, test, build)
       - name: Run validation
         run: npm run validate
         env:
-          CI: false  # Treat warnings as warnings, not errors
+          CI: true
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           BLOG_DATABASE_ID: ${{ secrets.BLOG_DATABASE_ID }}
           RECIPE_DATABASE_ID: ${{ secrets.RECIPE_DATABASE_ID }}
