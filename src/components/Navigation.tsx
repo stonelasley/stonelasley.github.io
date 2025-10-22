@@ -150,9 +150,6 @@ const Navigation: React.FC = () => {
           </div>
         </div>
       </aside>
-
-      {/* Mobile Spacer */}
-      <div className="md:hidden h-16" />
     </>
   );
 };
