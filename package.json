@@ -20,6 +20,7 @@
     "notion-to-md": "^3.1.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-helmet-async": "^2.0.5",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.4",
     "react-scripts": "5.0.1",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "@types/react-helmet-async": "^1.0.1",
     "autoprefixer": "^10.4.21",
     "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",

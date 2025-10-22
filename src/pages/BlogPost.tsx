@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -26,8 +27,31 @@ const BlogPost: React.FC = () => {
     day: 'numeric',
   });
 
+  const pageTitle = `${post.title} - Stone Lasley`;
+  const pageDescription = post.excerpt || post.title;
+  const pageUrl = `https://www.stonelasley.com/blog/${post.slug}`;
+
   return (
-    <div className="max-w-3xl mx-auto">
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="article:published_time" content={post.date} />
+        {post.lastUpdated && (
+          <meta property="article:modified_time" content={post.lastUpdated} />
+        )}
+        {post.author && <meta property="article:author" content={post.author} />}
+        {post.category && <meta property="article:section" content={post.category} />}
+        {post.tags && post.tags.map((tag: string) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+        <link rel="canonical" href={pageUrl} />
+      </Helmet>
+      <div className="max-w-3xl mx-auto">
       {/* Back Link */}
       <Link
         to="/blog"
@@ -136,7 +160,8 @@ const BlogPost: React.FC = () => {
           ← Back to Blog
         </Link>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

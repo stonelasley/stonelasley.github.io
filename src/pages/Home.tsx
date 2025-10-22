@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import BlogCard from '../components/BlogCard';
 import RecipeCard from '../components/RecipeCard';
 
@@ -23,9 +24,18 @@ const Home: React.FC = () => {
     .slice(0, 3);
 
   return (
-    <div className="space-y-16">
-      {/* Hero Section */}
-      <section>
+    <>
+      <Helmet>
+        <title>Stone Lasley - Developer, Technical Leader & More</title>
+        <meta name="description" content="Developer, technical leader, bodybuilder, photographer, skier, AI enthusiast, and horology aficionado. Explore blog posts, recipes, and more." />
+        <meta property="og:title" content="Stone Lasley - Developer, Technical Leader & More" />
+        <meta property="og:description" content="Developer, technical leader, bodybuilder, photographer, skier, AI enthusiast, and horology aficionado. Explore blog posts, recipes, and more." />
+        <meta property="og:url" content="https://www.stonelasley.com/" />
+        <link rel="canonical" href="https://www.stonelasley.com/" />
+      </Helmet>
+      <div className="space-y-16">
+        {/* Hero Section */}
+        <section>
         <h1 className="text-4xl font-bold text-gray-900 mb-6">Hello</h1>
         <div className="prose prose-lg max-w-none">
           <p>
@@ -94,7 +104,8 @@ const Home: React.FC = () => {
           </div>
         </section>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
