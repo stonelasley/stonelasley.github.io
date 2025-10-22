@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { RecipeDisplay } from '../types/recipe';
@@ -25,6 +26,11 @@ const RecipeDetail: React.FC = () => {
     return <Navigate to="/recipes" replace />;
   }
 
+  const pageTitle = `${recipe.name} - Stone Lasley`;
+  const pageDescription = recipe.description || `${recipe.name} - ${recipe.category} recipe, ${recipe.totalTime} minutes total time, serves ${recipe.servings}`;
+  const pageUrl = `https://www.stonelasley.com/recipes/${recipe.slug}`;
+  const recipeImageUrl = recipe.heroImg ? CLOUDINARY_PRESETS.recipeHero(recipe.heroImg) : undefined;
+
   // Toggle ingredient checkbox
   const toggleIngredient = (id: string) => {
     const newSet = new Set(checkedIngredients);
@@ -48,9 +54,20 @@ const RecipeDetail: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Back Link */}
-      <Link
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={recipe.name} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={pageUrl} />
+        {recipeImageUrl && <meta property="og:image" content={recipeImageUrl} />}
+        {recipe.category && <meta name="keywords" content={`recipe, ${recipe.category}, cooking, ${recipe.difficulty}, ${recipe.tags?.join(', ')}`} />}
+        <link rel="canonical" href={pageUrl} />
+      </Helmet>
+      <div className="max-w-7xl mx-auto">
+        {/* Back Link */}
+        <Link
         to="/recipes"
         className="inline-block mb-8 text-gray-900 underline hover:no-underline"
       >
@@ -286,7 +303,8 @@ const RecipeDetail: React.FC = () => {
           ← Back to Recipes
         </Link>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
