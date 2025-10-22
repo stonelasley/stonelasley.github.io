@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA redirect solution
+      // When a 404 is encountered, this script saves the current path to sessionStorage
+      // and redirects to the root. The root page will then restore the path.
+      sessionStorage.setItem('redirect', location.pathname + location.search + location.hash);
+      location.replace('/');
+    </script>
+  </head>
+  <body>
+    <!-- This page will redirect to the root, where the SPA will handle the route -->
+  </body>
+</html>
