@@ -26,7 +26,7 @@ function App() {
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col md:ml-64">
-            <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 md:py-16">
+            <main className="flex-1 max-w-4xl w-full mx-auto px-6 pt-24 pb-12 md:py-16">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/blog" element={<Blog />} />
