@@ -87,14 +87,15 @@ const BlogPost: React.FC = () => {
                 />
               ),
               // Minimal link styling
-              // eslint-disable-next-line jsx-a11y/anchor-has-content
-              a: ({ node, ...props }) => (
+              a: ({ node, children, ...props }) => (
                 <a
                   {...props}
                   className="text-gray-900 underline hover:no-underline"
                   target={props.href?.startsWith('http') ? '_blank' : undefined}
                   rel={props.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                />
+                >
+                  {children}
+                </a>
               ),
               // Code styling
               code: ({ node, inline, ...props }: any) =>
@@ -108,13 +109,15 @@ const BlogPost: React.FC = () => {
                 <p className="mb-4 leading-relaxed text-gray-800" {...props} />
               ),
               // Headings
-              // eslint-disable-next-line jsx-a11y/heading-has-content
-              h2: ({ node, ...props }) => (
-                <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4" {...props} />
+              h2: ({ node, children, ...props }) => (
+                <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4" {...props}>
+                  {children}
+                </h2>
               ),
-              // eslint-disable-next-line jsx-a11y/heading-has-content
-              h3: ({ node, ...props }) => (
-                <h3 className="text-xl font-bold text-gray-900 mt-6 mb-3" {...props} />
+              h3: ({ node, children, ...props }) => (
+                <h3 className="text-xl font-bold text-gray-900 mt-6 mb-3" {...props}>
+                  {children}
+                </h3>
               ),
             }}
           >
