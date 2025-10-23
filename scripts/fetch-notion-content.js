@@ -29,6 +29,7 @@ const BLOG_DATABASE_ID = process.env.BLOG_DATABASE_ID;
 const RECIPE_DATABASE_ID = process.env.RECIPE_DATABASE_ID;
 const INGREDIENT_DATABASE_ID = process.env.INGREDIENT_DATABASE_ID;
 const RECIPE_INGREDIENT_DATABASE_ID = process.env.RECIPE_INGREDIENT_DATABASE_ID;
+const MEALPREP_PAGE_ID = process.env.MEALPREP_PAGE_ID;
 
 // Output directories
 const DATA_DIR = path.join(__dirname, '../src/data/notion');
@@ -138,6 +139,29 @@ function parseNotionSingleRelation(relationField) {
 }
 
 /**
+ * Extracts the title property from a Notion page regardless of the property name
+ * @param {Object|null} page - Notion page object
+ * @param {string} fallback - Fallback title to use if none found
+ * @returns {string} - Title text
+ */
+function extractPageTitle(page, fallback = '') {
+  if (!page || !page.properties) {
+    return fallback;
+  }
+
+  for (const property of Object.values(page.properties)) {
+    if (property?.type === 'title' && Array.isArray(property.title)) {
+      const titleText = extractPlainText(property.title);
+      if (titleText) {
+        return titleText;
+      }
+    }
+  }
+
+  return fallback;
+}
+
+/**
  * Fetches a Notion page by ID
  * @param {string} pageId - The Notion page ID
  * @returns {Promise<Object>} - The page object
@@ -151,6 +175,29 @@ async function fetchNotionPage(pageId) {
     console.error(`Error fetching page ${pageId}:`, error.message);
     return null;
   }
+}
+
+/**
+ * Converts markdown content into a short excerpt
+ * @param {string} markdown - Markdown content
+ * @param {number} length - Desired excerpt length
+ * @returns {string} - Plain text excerpt
+ */
+function generateExcerptFromMarkdown(markdown, length = 160) {
+  if (!markdown) {
+    return '';
+  }
+
+  const plainText = markdown
+    .replace(/```[\s\S]*?```/g, '') // remove code blocks
+    .replace(/`[^`]*`/g, '') // remove inline code
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // remove images entirely
+    .replace(/\[(.*?)\]\([^)]*\)/g, '$1') // replace links with link text
+    .replace(/[*_>#\-]+/g, ' ') // remove markdown characters
+    .replace(/\s+/g, ' ') // collapse whitespace
+    .trim();
+
+  return plainText.slice(0, length).trim();
 }
 
 /**
@@ -498,6 +545,41 @@ async function fetchRecipes(recipeIngredientsMap, ingredientsMap) {
 }
 
 /**
+ * Fetches and processes the meal prep standalone page from Notion
+ * @returns {Promise<Object|null>} - Page data or null if unavailable
+ */
+async function fetchMealPrepPage() {
+  if (!MEALPREP_PAGE_ID) {
+    console.log('Skipping meal prep page fetch - MEALPREP_PAGE_ID not set');
+    return null;
+  }
+
+  console.log('Fetching meal prep page...');
+
+  const page = await fetchNotionPage(MEALPREP_PAGE_ID);
+  if (!page) {
+    console.log('Meal prep page not found or not accessible.');
+    return null;
+  }
+
+  const slug = 'meal-prep';
+  const fallbackTitle = 'Meal Prep';
+  const title = extractPageTitle(page, fallbackTitle) || fallbackTitle;
+  const { markdown } = await processPageContent(MEALPREP_PAGE_ID, slug);
+
+  const excerpt = generateExcerptFromMarkdown(markdown);
+
+  return {
+    id: page.id,
+    title,
+    slug,
+    content: markdown || '',
+    excerpt,
+    lastUpdated: page.last_edited_time
+  };
+}
+
+/**
  * Main execution function
  */
 async function main() {
@@ -529,6 +611,7 @@ async function main() {
   console.log('- RECIPE_DATABASE_ID:', RECIPE_DATABASE_ID);
   console.log('- INGREDIENT_DATABASE_ID:', INGREDIENT_DATABASE_ID || '(optional - not set)');
   console.log('- RECIPE_INGREDIENT_DATABASE_ID:', RECIPE_INGREDIENT_DATABASE_ID || '(optional - not set)');
+  console.log('- MEALPREP_PAGE_ID:', MEALPREP_PAGE_ID || '(optional - not set)');
   console.log('='.repeat(50));
 
   try {
@@ -539,6 +622,7 @@ async function main() {
     // Fetch content sequentially to better isolate errors
     const blogPosts = await fetchBlogPosts();
     const recipes = await fetchRecipes(recipeIngredientsMap, ingredientsMap);
+    const mealPrepPage = await fetchMealPrepPage();
 
     // Create metadata
     const metadata = {
@@ -547,7 +631,8 @@ async function main() {
       recipeCount: recipes.length,
       ingredientCount: ingredientsMap.size,
       recipeIngredientCount: recipeIngredientsMap.size,
-      totalItems: blogPosts.length + recipes.length
+      totalItems: blogPosts.length + recipes.length,
+      mealPrepPageAvailable: Boolean(mealPrepPage && mealPrepPage.content)
     };
 
     // Write JSON files
@@ -575,6 +660,16 @@ async function main() {
       JSON.stringify(Array.from(recipeIngredientsMap.values()), null, 2)
     );
     console.log(`✓ Saved ${recipeIngredientsMap.size} recipe-ingredients to recipe-ingredients.json`);
+
+    fs.writeFileSync(
+      path.join(DATA_DIR, 'meal-prep.json'),
+      JSON.stringify(mealPrepPage || { title: 'Meal Prep', slug: 'meal-prep', content: '', excerpt: '' }, null, 2)
+    );
+    if (mealPrepPage?.content) {
+      console.log('✓ Saved meal prep page to meal-prep.json');
+    } else {
+      console.log('⚠️ Meal prep page not saved with content (missing or empty). Placeholder written instead.');
+    }
 
     fs.writeFileSync(
       path.join(DATA_DIR, 'metadata.json'),

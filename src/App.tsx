@@ -9,6 +9,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Recipes from './pages/Recipes';
 import RecipeDetail from './pages/RecipeDetail';
+import MealPrep from './pages/MealPrep';
 
 import './App.css';
 
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/recipes/:slug" element={<RecipeDetail />} />
+                <Route path="/meal-prep" element={<MealPrep />} />
               </Routes>
             </main>
 
